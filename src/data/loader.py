@@ -36,52 +36,44 @@ def load_ieee_dataset(config_path="configs/data_config.yaml"):
     Load and merge IEEE-CIS Fraud Detection dataset.
     """
 
+    # Resolve project root automatically
+    PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "../.."))
+
+    # Make config path absolute
+    if not os.path.isabs(config_path):
+        config_path = os.path.join(PROJECT_ROOT, config_path)
+
     config = load_config(config_path)
 
-    raw_path = config["paths"]["raw_data"]
+    # Resolve raw data path from project root
+    raw_path = os.path.join(PROJECT_ROOT, config["paths"]["raw_data"])
 
     files = config["files"]
 
-    train_transaction_path = os.path.join(
-        raw_path,
-        files["train_transaction"]
-    )
+    train_transaction_path = os.path.join(raw_path, files["train_transaction"])
 
-    train_identity_path = os.path.join(
-        raw_path,
-        files["train_identity"]
-    )
-
+    train_identity_path = os.path.join(raw_path, files["train_identity"])
 
     print("Loading transaction dataset...")
     transaction_df = load_csv(train_transaction_path)
 
-
     print("Loading identity dataset...")
     identity_df = load_csv(train_identity_path)
-
 
     print("\nTransaction shape:")
     print(transaction_df.shape)
 
-
     print("\nIdentity shape:")
     print(identity_df.shape)
 
-
     print("\nMerging datasets...")
 
-
     merged_df = transaction_df.merge(
-        identity_df,
-        on=config["merge"]["transaction_key"],
-        how="left"
+        identity_df, on=config["merge"]["transaction_key"], how="left"
     )
-
 
     print("\nMerged dataset shape:")
     print(merged_df.shape)
-
 
     return merged_df
 
@@ -92,4 +84,3 @@ if __name__ == "__main__":
 
     print("\nDataset preview:")
     print(df.head())
-
