@@ -1,0 +1,25 @@
+dataset:
+  name: ieee_cis_fraud_detection
+  description: "IEEE-CIS Fraud Detection Dataset"
+
+paths:
+  raw_data: data/raw
+  processed_data: data/processed
+  graph_data: data/graph
+
+files:
+  train_transaction: train_transaction.csv
+  train_identity: train_identity.csv
+  test_transaction: test_transaction.csv
+  test_identity: test_identity.csv
+  sample_submission: sample_submission.csv
+
+target:
+  column: isFraud
+
+merge:
+  transaction_key: TransactionID
+
+processing:
+  save_format: parquet
+  random_seed: 42

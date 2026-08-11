@@ -1,0 +1,19 @@
+model:
+  name: GraphSAGE
+
+architecture:
+  hidden_channels: 128
+  num_layers: 3
+  dropout: 0.3
+
+training:
+  epochs: 100
+  learning_rate: 0.001
+  batch_size: 512
+
+evaluation:
+  metrics:
+    - roc_auc
+    - precision
+    - recall
+    - f1

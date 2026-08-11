@@ -1,0 +1,17 @@
+project:
+  name: graph-fraud-ai
+  version: 1.0.0
+
+environment:
+  seed: 42
+
+data:
+  config: configs/data_config.yaml
+
+model:
+  config: configs/model_config.yaml
+
+directories:
+  logs: logs
+  models: models
+  reports: reports
