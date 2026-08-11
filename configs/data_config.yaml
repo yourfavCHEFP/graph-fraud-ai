@@ -22,4 +22,7 @@ merge:
 
 processing:
   save_format: parquet
+  processed_train_file: train_processed.parquet
+  missing_threshold: 0.90
+  categorical_missing_value: "Unknown"
   random_seed: 42
