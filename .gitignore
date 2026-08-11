@@ -1,0 +1,52 @@
+
+# Python
+__pycache__/
+*.py[cod]
+
+# Virtual environment
+.venv/
+venv/
+.env
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Data
+data/raw/*
+data/processed/*
+data/graph/*
+
+!data/raw/.gitkeep
+!data/processed/.gitkeep
+!data/graph/.gitkeep
+
+
+# Models
+models/checkpoints/*
+models/trained/*
+models/exported/*
+models/embeddings/*
+
+!models/checkpoints/.gitkeep
+!models/trained/.gitkeep
+!models/exported/.gitkeep
+!models/embeddings/.gitkeep
+
+
+# Logs
+logs/*
+
+!logs/.gitkeep
+
+
+# OS
+.DS_Store
+
+# IDE
+.vscode/
+.idea/
+
+# ML tracking
+mlruns/
+wandb/
+
