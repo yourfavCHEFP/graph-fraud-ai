@@ -1,16 +1,39 @@
+# ==============================
 # Python
+# ==============================
+
 __pycache__/
 *.py[cod]
+*.so
 
-# Virtual environment
+
+# ==============================
+# Virtual Environment
+# ==============================
+
 .venv/
 venv/
 .env
 
+
+# ==============================
 # Jupyter
+# ==============================
+
 .ipynb_checkpoints/
 
+
+# ==============================
+# macOS
+# ==============================
+
+.DS_Store
+
+
+# ==============================
 # Data
+# ==============================
+
 data/raw/*
 data/processed/*
 data/graph/*
@@ -20,24 +43,32 @@ data/graph/*
 !data/processed/.gitkeep
 !data/graph/.gitkeep
 
-# Trained model artifacts
+
+# ==============================
+# Trained Models
+# ==============================
+
 models/*.pt
 models/*.pth
 
-
-# Data
-data/raw/*
-data/processed/*
-data/graph/*
-
-# Keep folder structure
-!data/raw/.gitkeep
-!data/processed/.gitkeep
-!data/graph/.gitkeep
-
-
-# Models
 models/checkpoints/*
 models/trained/*
 models/exported/*
-models/embeddings/*
+models/embeddings/
+
+
+# ==============================
+# Logs / Experiments
+# ==============================
+
+logs/
+wandb/
+mlruns/
+
+
+# ==============================
+# IDE
+# ==============================
+
+.vscode/
+.idea/
