@@ -1,4 +1,3 @@
-
 # Python
 __pycache__/
 *.py[cod]
@@ -16,6 +15,22 @@ data/raw/*
 data/processed/*
 data/graph/*
 
+# Keep folder structure
+!data/raw/.gitkeep
+!data/processed/.gitkeep
+!data/graph/.gitkeep
+
+# Trained model artifacts
+models/*.pt
+models/*.pth
+
+
+# Data
+data/raw/*
+data/processed/*
+data/graph/*
+
+# Keep folder structure
 !data/raw/.gitkeep
 !data/processed/.gitkeep
 !data/graph/.gitkeep
@@ -26,27 +41,3 @@ models/checkpoints/*
 models/trained/*
 models/exported/*
 models/embeddings/*
-
-!models/checkpoints/.gitkeep
-!models/trained/.gitkeep
-!models/exported/.gitkeep
-!models/embeddings/.gitkeep
-
-
-# Logs
-logs/*
-
-!logs/.gitkeep
-
-
-# OS
-.DS_Store
-
-# IDE
-.vscode/
-.idea/
-
-# ML tracking
-mlruns/
-wandb/
-
