@@ -10,9 +10,6 @@ Output:
 
 
 import torch
-import torch.nn.functional as F
-
-from torch_geometric.data import Data
 
 from src.models.gnn_model import FraudGraphSAGE
 
@@ -26,7 +23,6 @@ def load_graph():
         "data/graph/fraud_graph_ready.pt",
         weights_only=False
     )
-
 
     print(graph)
 
@@ -56,9 +52,8 @@ def train():
     )
 
 
-    graph = graph.to(
-        device
-    )
+    graph = graph.to(device)
+
 
 
     model = FraudGraphSAGE(
@@ -66,9 +61,8 @@ def train():
     )
 
 
-    model = model.to(
-        device
-    )
+    model = model.to(device)
+
 
 
     optimizer = torch.optim.Adam(
@@ -78,9 +72,13 @@ def train():
     )
 
 
-    # Handle fraud imbalance
 
-    fraud_count = graph.y.sum()
+    # ==============================
+    # Handle class imbalance
+    # ==============================
+
+    fraud_count = graph.y.sum().float()
+
 
     normal_count = (
         graph.y.shape[0]
@@ -89,18 +87,50 @@ def train():
     )
 
 
-    weight = torch.tensor(
+    fraud_ratio = (
+        normal_count /
+        fraud_count
+    )
+
+
+    print(
+        "\nFraud ratio:",
+        fraud_ratio.item()
+    )
+
+
+    # Softer weighting
+    fraud_weight = torch.sqrt(
+        fraud_ratio
+    )
+
+
+    # Prevent extreme bias
+    fraud_weight = torch.clamp(
+        fraud_weight,
+        max=5.0
+    )
+
+
+    print(
+        "Using fraud class weight:",
+        fraud_weight.item()
+    )
+
+
+
+    class_weights = torch.tensor(
         [
             1.0,
-            normal_count / fraud_count
+            fraud_weight.item()
         ],
         dtype=torch.float
     ).to(device)
 
 
 
-    loss_function = torch.nn.CrossEntropyLoss(
-        weight=weight
+    criterion = torch.nn.CrossEntropyLoss(
+        weight=class_weights
     )
 
 
@@ -113,9 +143,7 @@ def train():
     )
 
 
-    for epoch in range(
-        epochs
-    ):
+    for epoch in range(epochs):
 
 
         model.train()
@@ -124,13 +152,15 @@ def train():
         optimizer.zero_grad()
 
 
+
         output = model(
             graph.x,
             graph.edge_index
         )
 
 
-        loss = loss_function(
+
+        loss = criterion(
             output[
                 graph.train_mask
             ],
@@ -138,6 +168,7 @@ def train():
                 graph.train_mask
             ]
         )
+
 
 
         loss.backward()
@@ -149,8 +180,32 @@ def train():
 
         if epoch % 5 == 0:
 
+            model.eval()
+
+
+            with torch.no_grad():
+
+                predictions = output.argmax(
+                    dim=1
+                )
+
+
+                train_acc = (
+                    predictions[
+                        graph.train_mask
+                    ]
+                    ==
+                    graph.y[
+                        graph.train_mask
+                    ]
+                ).float().mean()
+
+
+
             print(
-                f"Epoch {epoch} | Loss {loss.item():.4f}"
+                f"Epoch {epoch} | "
+                f"Loss {loss.item():.4f} | "
+                f"Train Acc {train_acc.item():.4f}"
             )
 
 
