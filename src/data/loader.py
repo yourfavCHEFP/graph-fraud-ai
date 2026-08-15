@@ -1,81 +1,175 @@
-# # This file job is
-# # Read configuration
-# Locate dataset files
-# Load transaction data
-# Load identity data
-# Merge them
-# Report dataset information
-# Return clean dataframe objects
+"""
+IEEE-CIS Fraud Detection dataset loader.
+
+Responsibilities:
+    - Read configuration.
+    - Locate dataset files.
+    - Load transaction data.
+    - Load identity data.
+    - Merge transaction and identity data.
+    - Report dataset information.
+    - Return the merged dataframe.
+"""
 
 import os
 
 import pandas as pd
 import yaml
 
+# ============================================================
+# LOAD CONFIGURATION
+# ============================================================
 
-def load_config(path="configs/data_config.yaml"):
+
+def load_config(
+    path="configs/data_config.yaml",
+):
     """
-    Load dataset configuration.
+    Load dataset configuration from YAML.
     """
-    with open(path, "r") as file:
+
+    if not os.path.exists(path):
+        raise FileNotFoundError(f"Configuration file not found: {path}")
+
+    with open(
+        path,
+        "r",
+    ) as file:
+
         return yaml.safe_load(file)
+
+
+# ============================================================
+# LOAD CSV
+# ============================================================
 
 
 def load_csv(path):
     """
-    Load CSV file safely.
+    Load a CSV file safely.
     """
+
     if not os.path.exists(path):
         raise FileNotFoundError(f"Dataset file not found: {path}")
 
     return pd.read_csv(path)
 
 
-def load_ieee_dataset(config_path="configs/data_config.yaml"):
+# ============================================================
+# LOAD IEEE-CIS DATASET
+# ============================================================
+
+
+def load_ieee_dataset(
+    config_path="configs/data_config.yaml",
+):
     """
-    Load and merge IEEE-CIS Fraud Detection dataset.
+    Load and merge the IEEE-CIS Fraud Detection dataset.
     """
 
-    # Resolve project root automatically
-    PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "../.."))
+    project_root = os.path.abspath(
+        os.path.join(
+            os.path.dirname(__file__),
+            "../..",
+        )
+    )
 
-    # Make config path absolute
+    # --------------------------------------------------------
+    # Resolve configuration path
+    # --------------------------------------------------------
+
     if not os.path.isabs(config_path):
-        config_path = os.path.join(PROJECT_ROOT, config_path)
+
+        config_path = os.path.join(
+            project_root,
+            config_path,
+        )
 
     config = load_config(config_path)
 
-    # Resolve raw data path from project root
-    raw_path = os.path.join(PROJECT_ROOT, config["paths"]["raw_data"])
+    # --------------------------------------------------------
+    # Resolve raw data directory
+    # --------------------------------------------------------
+
+    raw_path = os.path.join(
+        project_root,
+        config["paths"]["raw_data"],
+    )
 
     files = config["files"]
 
-    train_transaction_path = os.path.join(raw_path, files["train_transaction"])
+    transaction_file = files["train_transaction"]
 
-    train_identity_path = os.path.join(raw_path, files["train_identity"])
+    identity_file = files["train_identity"]
+
+    transaction_path = os.path.join(
+        raw_path,
+        transaction_file,
+    )
+
+    identity_path = os.path.join(
+        raw_path,
+        identity_file,
+    )
+
+    # ========================================================
+    # LOAD TRANSACTION DATA
+    # ========================================================
 
     print("Loading transaction dataset...")
-    transaction_df = load_csv(train_transaction_path)
+
+    transaction_df = load_csv(transaction_path)
+
+    # ========================================================
+    # LOAD IDENTITY DATA
+    # ========================================================
 
     print("Loading identity dataset...")
-    identity_df = load_csv(train_identity_path)
+
+    identity_df = load_csv(identity_path)
+
+    # ========================================================
+    # DATASET INFORMATION
+    # ========================================================
 
     print("\nTransaction shape:")
+
     print(transaction_df.shape)
 
     print("\nIdentity shape:")
+
     print(identity_df.shape)
+
+    # ========================================================
+    # MERGE
+    # ========================================================
+
+    merge_key = config["merge"]["transaction_key"]
+
+    if merge_key not in transaction_df.columns:
+        raise KeyError(f"Merge key '{merge_key}' " "not found in transaction dataset.")
+
+    if merge_key not in identity_df.columns:
+        raise KeyError(f"Merge key '{merge_key}' " "not found in identity dataset.")
 
     print("\nMerging datasets...")
 
     merged_df = transaction_df.merge(
-        identity_df, on=config["merge"]["transaction_key"], how="left"
+        identity_df,
+        on=merge_key,
+        how="left",
     )
 
     print("\nMerged dataset shape:")
+
     print(merged_df.shape)
 
     return merged_df
+
+
+# ============================================================
+# ENTRY POINT
+# ============================================================
 
 
 if __name__ == "__main__":
@@ -83,4 +177,5 @@ if __name__ == "__main__":
     df = load_ieee_dataset()
 
     print("\nDataset preview:")
+
     print(df.head())

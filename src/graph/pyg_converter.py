@@ -16,117 +16,238 @@ import torch
 from torch_geometric.data import Data
 
 
+FEATURE_COLUMNS = [
+    "degree",
+    "transaction_entity_count",
+    "log_transaction_amount",
+    "card_degree",
+    "email_degree",
+    "device_degree",
+    "address_degree",
+    "node_type_id",
+]
+
+
 def load_graph():
 
-    print("\nLoading NetworkX graph...")
+    print(
+        "\nLoading NetworkX graph..."
+    )
 
-    with open("data/graph/fraud_graph.pkl", "rb") as f:
+    with open(
+        "data/graph/fraud_graph.pkl",
+        "rb"
+    ) as f:
 
         graph = pickle.load(f)
 
-    print("Nodes:", graph.number_of_nodes())
+    print(
+        "Nodes:",
+        graph.number_of_nodes()
+    )
 
-    print("Edges:", graph.number_of_edges())
+    print(
+        "Edges:",
+        graph.number_of_edges()
+    )
 
     return graph
 
 
 def load_features():
 
-    print("\nLoading graph features...")
+    print(
+        "\nLoading graph features..."
+    )
 
-    df = pd.read_parquet("data/graph/node_features.parquet")
+    df = pd.read_parquet(
+        "data/graph/node_features.parquet"
+    )
 
-    print("Feature shape:", df.shape)
+    print(
+        "Feature shape:",
+        df.shape
+    )
 
     return df
 
 
-def build_pyg_graph(graph, feature_df):
+def build_pyg_graph(
+    graph,
+    feature_df
+):
 
-    print("\nBuilding PyTorch Geometric graph...")
+    print(
+        "\nBuilding PyTorch Geometric graph..."
+    )
 
-    nodes = list(graph.nodes())
+    nodes = list(
+        graph.nodes()
+    )
 
-    node_mapping = {node: idx for idx, node in enumerate(nodes)}
+    node_mapping = {
+        node: idx
+        for idx, node in enumerate(nodes)
+    }
 
-    print("Total mapped nodes:", len(node_mapping))
+    print(
+        "Total mapped nodes:",
+        len(node_mapping)
+    )
 
-    feature_columns = [
-        "degree",
-        "transaction_entity_count",
-        "fraud_neighbor_count",
-        "fraud_neighbor_ratio",
+    required_columns = [
+        "node_id"
+    ] + FEATURE_COLUMNS
+
+    missing = [
+        col
+        for col in required_columns
+        if col not in feature_df.columns
     ]
-
-    required_columns = ["node_id"] + feature_columns
-
-    missing = [col for col in required_columns if col not in feature_df.columns]
 
     if missing:
 
-        raise ValueError(f"Missing feature columns: {missing}")
+        raise ValueError(
+            f"Missing feature columns: {missing}"
+        )
 
-    print("\nAligning node features...")
+    print(
+        "\nAligning node features..."
+    )
 
-    feature_df = feature_df.set_index("node_id")
+    feature_df = feature_df.set_index(
+        "node_id"
+    )
 
-    feature_df = feature_df.reindex(nodes)
+    feature_df = feature_df.reindex(
+        nodes
+    )
 
-    if feature_df.isnull().all(axis=1).any():
+    if feature_df[
+        FEATURE_COLUMNS
+    ].isnull().all(axis=1).any():
 
-        raise ValueError("Some graph nodes have no matching features")
+        raise ValueError(
+            "Some graph nodes have no matching features"
+        )
 
-    x = torch.tensor(feature_df[feature_columns].fillna(0).values, dtype=torch.float)
+    feature_df[
+        FEATURE_COLUMNS
+    ] = feature_df[
+        FEATURE_COLUMNS
+    ].fillna(0)
 
-    print("Node feature tensor:", x.shape)
+    x = torch.tensor(
+        feature_df[
+            FEATURE_COLUMNS
+        ].values,
+        dtype=torch.float
+    )
 
-    print("\nBuilding edges...")
+    print(
+        "Node feature tensor:",
+        x.shape
+    )
+
+    print(
+        "Input feature dimension:",
+        x.shape[1]
+    )
+
+    print(
+        "\nBuilding edges..."
+    )
 
     edges = []
 
     for source, target in graph.edges():
 
-        edges.append([node_mapping[source], node_mapping[target]])
+        edges.append(
+            [
+                node_mapping[source],
+                node_mapping[target]
+            ]
+        )
 
-        edges.append([node_mapping[target], node_mapping[source]])
+        edges.append(
+            [
+                node_mapping[target],
+                node_mapping[source]
+            ]
+        )
 
     if len(edges) == 0:
 
-        raise ValueError("Graph contains no edges")
+        raise ValueError(
+            "Graph contains no edges"
+        )
 
-    edge_index = torch.tensor(edges, dtype=torch.long).t().contiguous()
+    edge_index = torch.tensor(
+        edges,
+        dtype=torch.long
+    ).t().contiguous()
 
-    pyg_graph = Data(x=x, edge_index=edge_index)
+    pyg_graph = Data(
+        x=x,
+        edge_index=edge_index
+    )
 
-    print("\nPyG Graph Created")
+    print(
+        "\nPyG Graph Created"
+    )
 
-    print(pyg_graph)
+    print(
+        pyg_graph
+    )
 
     return pyg_graph
 
 
 def main():
 
-    print("==============================")
-    print("PHASE 8 GNN DATA PREPARATION")
-    print("==============================")
+    print(
+        "=============================="
+    )
+
+    print(
+        "PHASE 8 GNN DATA PREPARATION"
+    )
+
+    print(
+        "=============================="
+    )
 
     graph = load_graph()
 
     features = load_features()
 
-    pyg_graph = build_pyg_graph(graph, features)
+    pyg_graph = build_pyg_graph(
+        graph,
+        features
+    )
 
-    torch.save(pyg_graph, "data/graph/fraud_graph_pyg.pt")
+    torch.save(
+        pyg_graph,
+        "data/graph/fraud_graph_pyg.pt"
+    )
 
-    print("\nSaved:", "data/graph/fraud_graph_pyg.pt")
+    print(
+        "\nSaved:",
+        "data/graph/fraud_graph_pyg.pt"
+    )
 
-    print("==============================")
-    print("GNN DATA PREPARATION COMPLETE")
-    print("==============================")
+    print(
+        "=============================="
+    )
+
+    print(
+        "GNN DATA PREPARATION COMPLETE"
+    )
+
+    print(
+        "=============================="
+    )
 
 
 if __name__ == "__main__":
-
     main()
