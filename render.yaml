@@ -4,14 +4,25 @@ services:
     runtime: docker
     dockerfilePath: ./Dockerfile
     healthCheckPath: /health
+
     envVars:
       - key: APP_ENV
         value: production
+
+      - key: API_HOST
+        value: 0.0.0.0
+
+      - key: API_PORT
+        value: 8000
+
       - key: ALLOW_ORIGINS
         value: "*"
+
       - key: MODEL_REGISTRY_PATH
         value: models/registry/model_registry.json
+
       - key: MODEL_CHECKPOINT_PATH
-        value: models/graphsage_improved.pt
+        value: models/production/graphsage_improved.pt
+
       - key: GRAPH_PATH
         value: data/graph/fraud_graph_ready.pt

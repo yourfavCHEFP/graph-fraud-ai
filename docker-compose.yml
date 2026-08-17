@@ -9,6 +9,8 @@ services:
       APP_ENV: production
       API_HOST: 0.0.0.0
       API_PORT: 8000
+      MODEL_CHECKPOINT_PATH: models/production/graphsage_improved.pt
+      MODEL_REGISTRY_PATH: models/registry/model_registry.json
     healthcheck:
       test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health')"]
       interval: 30s
