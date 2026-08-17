@@ -1,0 +1,6 @@
+streamlit>=1.36
+requests>=2.31
+pandas>=2.2
+plotly>=5.20
+networkx>=3.3
+numpy>=2.0
