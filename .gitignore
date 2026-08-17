@@ -36,7 +36,6 @@ venv/
 
 data/raw/*
 data/processed/*
-data/graph/*
 
 # Keep folder structure
 !data/raw/.gitkeep
