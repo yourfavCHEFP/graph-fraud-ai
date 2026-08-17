@@ -3,6 +3,7 @@ import torch
 
 from src.models.gnn_model import FraudGraphSAGE
 from src.features.graph_features import build_graph_features
+from src.explainability.fraud_reasoner import build_fraud_explanation
 
 
 class FraudPredictor:
@@ -12,12 +13,10 @@ class FraudPredictor:
         registry_path="models/registry/model_registry.json",
         graph_path="data/graph/fraud_graph_ready.pt",
     ):
-        self.registry_path = registry_path
         self.graph_path = graph_path
-        self.device = torch.device("cpu")
 
-        with open(registry_path) as f:
-            self.registry = json.load(f)
+        with open(registry_path) as file:
+            self.registry = json.load(file)
 
         checkpoint = torch.load(
             self.registry["production_model"]["checkpoint"],
@@ -41,7 +40,7 @@ class FraudPredictor:
         self.std = checkpoint["normalization_std"]
 
 
-    def predict(self):
+    def predict_transaction(self, transaction_id):
 
         graph = torch.load(
             self.graph_path,
@@ -50,7 +49,6 @@ class FraudPredictor:
         )
 
         features = build_graph_features(graph)
-
         features = (features - self.mean) / self.std
 
         with torch.no_grad():
@@ -59,14 +57,21 @@ class FraudPredictor:
                 graph.edge_index,
             )
 
-            probabilities = torch.softmax(
+            probability = torch.softmax(
                 logits,
                 dim=1,
-            )[:,1]
+            )[transaction_id, 1].item()
 
         return {
-            "count": int(probabilities.shape[0]),
-            "threshold": float(self.threshold),
-            "fraud_predictions":
-                int((probabilities >= self.threshold).sum()),
+            "transaction_id": transaction_id,
+            "prediction": "fraud" if probability >= self.threshold else "legitimate",
+            "fraud_probability": round(probability, 6),
+            "threshold": self.threshold,
+            "model": "GraphSAGE",
+            "explanation": build_fraud_explanation(
+                graph,
+                transaction_id,
+                probability,
+                self.threshold,
+            ),
         }

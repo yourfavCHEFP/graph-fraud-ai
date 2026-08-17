@@ -34,3 +34,11 @@ Phase 11: Model benchmarking and selection complete.
 Phase 12: Production inference layer.
 Phase 13: FastAPI serving.
 Phase 14: Deployment preparation.
+
+
+## Phase 15-16 Status
+
+- Explainability layer completed
+- Fraud investigation dashboard added
+- POST prediction API completed
+- Production inference flow upgraded

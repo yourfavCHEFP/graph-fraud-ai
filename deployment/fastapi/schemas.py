@@ -1,7 +1,14 @@
 from pydantic import BaseModel
 
 
+class PredictionRequest(BaseModel):
+    transaction_id: int
+
+
 class PredictionResponse(BaseModel):
-    count: int
+    transaction_id: int
+    prediction: str
+    fraud_probability: float
     threshold: float
-    fraud_predictions: int
+    model: str
+    explanation: dict
