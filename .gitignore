@@ -72,3 +72,7 @@ mlruns/
 
 .vscode/
 .idea/
+.coverage
+coverage.xml
+.agents/
+.streamlit/

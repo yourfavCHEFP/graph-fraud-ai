@@ -3,7 +3,7 @@
     "production_model": {
         "name": "graphsage_improved",
         "architecture": "GraphSAGE",
-        "checkpoint": "models/graphsage_improved.pt",
+        "checkpoint": "models/production/graphsage_improved.pt",
         "status": "champion"
     },
     "task": {

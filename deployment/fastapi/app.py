@@ -4,6 +4,7 @@ import os
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+
 from deployment.fastapi.routes.predict import router
 from deployment.fastapi.services.inference import get_predictor
 
@@ -12,6 +13,17 @@ app = FastAPI(
     version="1.0.0",
     description="Transaction-level fraud scoring with a GraphSAGE champion model.",
 )
+
+
+@app.get("/")
+def root():
+    return {"service": "Graph Fraud AI API", "status": "running", "model": "GraphSAGE"}
+
+
+@app.get("/health")
+def health():
+    return {"status": "healthy"}
+
 
 allow_origins = [
     origin.strip()
