@@ -1,0 +1,17 @@
+services:
+  - type: web
+    name: graph-fraud-ai-api
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    healthCheckPath: /health
+    envVars:
+      - key: APP_ENV
+        value: production
+      - key: ALLOW_ORIGINS
+        value: "*"
+      - key: MODEL_REGISTRY_PATH
+        value: models/registry/model_registry.json
+      - key: MODEL_CHECKPOINT_PATH
+        value: models/graphsage_improved.pt
+      - key: GRAPH_PATH
+        value: data/graph/fraud_graph_ready.pt
