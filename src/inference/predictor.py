@@ -74,12 +74,12 @@ class FraudPredictor:
         self.graph = torch.load(
             self.graph_path, map_location="cpu", weights_only=False
         )
-        features = build_graph_features(self.graph)
-        self.features = (features - self.mean) / self.std
 
-        with torch.no_grad():
-            logits = self.model(self.features, self.graph.edge_index)
-            self.probabilities = torch.softmax(logits, dim=1)[:, 1]
+        # Do not execute full graph inference during startup. On Render Free,
+        # doing a complete GraphSAGE forward pass during health checks can make
+        # the service unavailable. Predictions are generated lazily.
+        self.features = None
+        self.probabilities = None
 
     @property
     def model_name(self):
@@ -91,6 +91,13 @@ class FraudPredictor:
             raise ValueError(
                 f"transaction_id must be between 0 and {self.graph.x.shape[0] - 1}"
             )
+
+        if self.probabilities is None:
+            features = build_graph_features(self.graph)
+            self.features = (features - self.mean) / self.std
+            with torch.no_grad():
+                logits = self.model(self.features, self.graph.edge_index)
+                self.probabilities = torch.softmax(logits, dim=1)[:, 1]
 
         probability = float(self.probabilities[transaction_id].item())
         prediction = "fraud" if probability >= self.threshold else "legitimate"

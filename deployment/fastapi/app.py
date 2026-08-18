@@ -44,10 +44,12 @@ def health():
 
 @app.get("/ready")
 def ready():
-    """Return readiness only when model and graph artifacts can be loaded."""
-    predictor = get_predictor()
+    """Fast readiness probe for Render.
+
+    Do not initialize the GraphSAGE inference pipeline here. Render health/readiness
+    checks must stay lightweight; expensive model loading happens on prediction.
+    """
     return {
         "status": "ready",
-        "model": predictor.model_name,
-        "feature_count": int(predictor.features.shape[1]),
+        "service": "graph-fraud-ai",
     }
