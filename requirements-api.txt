@@ -1,0 +1,11 @@
+torch==2.5.1
+torch-geometric==2.5.3
+numpy
+pandas
+scikit-learn
+fastapi
+uvicorn[standard]
+pydantic
+python-dotenv
+requests
+pyyaml
