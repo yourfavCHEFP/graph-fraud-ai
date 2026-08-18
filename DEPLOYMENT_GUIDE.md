@@ -1,0 +1,33 @@
+# Graph Fraud AI Deployment Fix Guide
+
+## Render API
+
+1. Push this repository to GitHub.
+2. Create Render Web Service.
+3. Settings:
+   - Runtime: Docker
+   - Root Directory: empty
+   - Dockerfile Path: ./Dockerfile
+4. Environment variables:
+
+GRAPH_PATH=data/graph/fraud_graph_ready.pt
+MODEL_CHECKPOINT_PATH=models/production/graphsage_improved.pt
+MODEL_REGISTRY_PATH=models/registry/model_registry.json
+ALLOW_ORIGINS=*
+
+5. Deploy.
+
+Test:
+curl -X POST https://YOUR-URL.onrender.com/predict \
+-H "Content-Type: application/json" \
+-d '{"transaction_id":1}'
+
+## Streamlit
+
+Deploy deployment/streamlit/app.py.
+
+Set API URL to:
+https://YOUR-RENDER-URL.onrender.com
+
+Install:
+pip install -r deployment/streamlit/requirements.txt

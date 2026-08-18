@@ -2,12 +2,12 @@ FROM python:3.11-slim
 
 WORKDIR /app
 
-RUN apt-get update && apt-get install -y git git-lfs
-
-RUN git lfs install
-
-COPY . .
+COPY requirements-api.txt .
 
 RUN pip install --default-timeout=1000 --no-cache-dir -r requirements-api.txt
 
-CMD ["uvicorn","deployment.fastapi.app:app","--host","0.0.0.0","--port","8000"]
+COPY . .
+
+EXPOSE 8000
+
+CMD ["uvicorn", "deployment.fastapi.app:app", "--host", "0.0.0.0", "--port", "8000"]

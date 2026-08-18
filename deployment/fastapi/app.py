@@ -20,11 +20,6 @@ def root():
     return {"service": "Graph Fraud AI API", "status": "running", "model": "GraphSAGE"}
 
 
-@app.get("/health")
-def health():
-    return {"status": "healthy"}
-
-
 allow_origins = [
     origin.strip()
     for origin in os.getenv("ALLOW_ORIGINS", "*").split(",")

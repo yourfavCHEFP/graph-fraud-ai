@@ -26,3 +26,6 @@ services:
 
       - key: GRAPH_PATH
         value: data/graph/fraud_graph_ready.pt
+
+      - key: DEFAULT_FRAUD_THRESHOLD
+        value: "0.5"

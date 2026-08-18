@@ -75,3 +75,4 @@ mlruns/
 coverage.xml
 .agents/
 .streamlit/
+data/graph/fraud_graph.pkl

@@ -1,28 +1,40 @@
+# Git
 .git
 .github
 
+# Python cache
 __pycache__
 *.pyc
+*.pyo
 
+# Local environments
 .venv
 venv
 
+# Secrets
 .env
 
+# Development-only data
 data/raw
 data/processed
-data/graph
 
+# Keep production artifacts:
+# data/graph/fraud_graph_ready.pt
+# models/registry/model_registry.json
+# models/production/*.pt
+
+# Development folders
 notebooks
-
 experiments
-
 reports
-
 logs
 
+# Training-only model folders
 models/archive
 models/checkpoints
-models/trained
 
+# Jupyter
 *.ipynb
+
+# OS files
+.DS_Store
