@@ -3,7 +3,7 @@ services:
     name: graph-fraud-ai-api
     runtime: docker
     dockerfilePath: ./Dockerfile
-    healthCheckPath: /health
+    healthCheckPath: /ready
 
     envVars:
       - key: APP_ENV
