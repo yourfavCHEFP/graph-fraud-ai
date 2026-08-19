@@ -133,6 +133,18 @@ class FraudPredictor:
             self.probabilities = torch.softmax(logits, dim=1)[:, 1]
         logger.info("Forward pass complete -- predictor ready to serve.")
 
+        # FIX (OOM on Render free tier, 512MB limit): self.features (the
+        # normalized feature matrix, a full copy of the graph's node
+        # features) and self.model (weights) are NOT touched again after
+        # this point -- predict_transaction() below only uses
+        # self.graph/self.probabilities/self.threshold. self.graph itself
+        # must stay (predict_transaction() uses it for bounds-checking and
+        # passes it to build_fraud_explanation()), so it is NOT freed here.
+        del self.features, self.model, features, logits
+        import gc
+        gc.collect()
+        logger.info("Released unneeded feature/model tensors after forward pass.")
+
     @property
     def model_name(self):
         return self.registry["production_model"]["name"]
