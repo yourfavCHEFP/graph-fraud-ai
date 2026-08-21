@@ -1,49 +1,29 @@
 ---
-title: Graph-Fraud AI Demo
+title: Graph-Fraud AI Demo (Legacy)
 emoji: 🛡️
-colorFrom: blue
-colorTo: red
-sdk: streamlit
-sdk_version: 1.31.0
-app_file: app.py
+colorFrom: gray
+colorTo: black
+sdk: static
+sdk_version: 1.0.0
+app_file: index.html
 pinned: false
 ---
 
-# 🛡️ Graph-Fraud AI: Production Demo
+# 🛡️ Graph-Fraud AI: Deployment Notice
 
-This Hugging Face Space hosts the production inference engine for the **Graph-Fraud AI** project. It demonstrates how a trained **GraphSAGE** model can be deployed to provide real-time fraud detection and relational explainability.
+Due to recent changes in Hugging Face Space SDK availability for free tier users, the interactive Streamlit demo has been migrated to **Streamlit Community Cloud** for a better free-tier experience.
 
-## 🏗️ The Bridge Architecture
+## 🚀 Live Demo
+You can access the live interactive fraud detection dashboard here:
+**[Link to your Streamlit Cloud App - Replace this with your URL once deployed]**
 
-This project follows a professional separation of concerns between research and production:
+## 🏗️ Project Architecture
+The project continues to follow the **Bridge Architecture**:
+1.  **GitHub (Research & Development):** Contains the full ML pipeline, 10-notebook series, and model training code.
+2.  **Streamlit Cloud (Production Demo):** Hosts the interactive dashboard and GraphSAGE inference engine.
 
-1.  **GitHub (Research & Development):** Contains the full ML pipeline, 10-notebook series, graph construction logic, and model training experiments.
-2.  **Hugging Face (Production Demo):** Hosts this interactive dashboard, running the inference engine in-process for low-latency predictions and graph visualizations.
+## 📦 Repository
+For the full source code, research notebooks, and deployment files, visit the [GitHub Repository](https://github.com/yourfavCHEFP/graph-fraud-ai).
 
-## 🚀 Features
-
-*   **Real-time Inference:** Predicts fraud probability for any transaction in the graph using GraphSAGE.
-*   **Relational Explainability:** Breaks down *why* a transaction is flagged, highlighting specific graph-based risk factors.
-*   **Graph Visualization:** Renders the local neighborhood of a transaction to show its connections to other entities (cards, devices, IPs).
-
-## 🛠️ Technical Stack
-
-*   **Framework:** PyTorch Geometric (PyG)
-*   **Model:** Heterogeneous GraphSAGE
-*   **UI:** Streamlit
-*   **Graph Logic:** NetworkX & Matplotlib
-
-## 📦 Setup & Deployment Notes
-
-The model checkpoint and graph file are large binaries and must be tracked with **Git LFS** in the Hugging Face Space repository:
-
-```bash
-git lfs install
-git lfs track "*.pt"
-git add .gitattributes
-git add models/production/graphsage_improved.pt data/graph/fraud_graph_ready.pt
-git commit -m "Add model + graph artifacts"
-git push
-```
-
-For the full source code, research notebooks, and training pipeline, visit the [GitHub Repository](https://github.com/yourfavCHEFP/graph-fraud-ai).
+---
+*Note: This Space is now a static landing page. The original Streamlit deployment files are still available in the `deployment/huggingface/` folder of the GitHub repo for users with Hugging Face Pro subscriptions.*

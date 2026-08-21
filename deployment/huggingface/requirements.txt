@@ -1,6 +1,16 @@
+# Optimized for Streamlit Cloud (CPU Tier)
 --extra-index-url https://download.pytorch.org/whl/cpu
-torch==2.5.1
+
+# Core ML stack
+torch==2.5.1+cpu
 torch-geometric==2.5.3
+
+# PyG Dependencies (using pre-built CPU wheels to avoid compilation errors)
+--find-links https://data.pyg.org/whl/torch-2.5.1+cpu.html
+torch-scatter
+torch-sparse
+
+# Data & Visualization
 numpy
 pandas
 scikit-learn
