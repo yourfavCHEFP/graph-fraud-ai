@@ -1,2 +1,10 @@
-gradio>=4.44,<6
-requests>=2.31,<3
+--extra-index-url https://download.pytorch.org/whl/cpu
+torch==2.5.1
+torch-geometric==2.5.3
+numpy
+pandas
+scikit-learn
+streamlit
+networkx
+matplotlib
+python-dotenv
