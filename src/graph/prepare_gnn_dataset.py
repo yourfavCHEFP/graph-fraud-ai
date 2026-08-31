@@ -22,7 +22,6 @@ import pickle
 
 import pandas as pd
 import torch
-from sklearn.model_selection import train_test_split
 
 
 PYG_GRAPH_PATH = "data/graph/fraud_graph_pyg.pt"
@@ -86,7 +85,8 @@ def load_labels():
 
     required_columns = [
         "TransactionID",
-        "isFraud"
+        "isFraud",
+        "TransactionDT"
     ]
 
     missing_columns = [
@@ -110,10 +110,12 @@ def create_label_mapping(df):
     print("\nCreating transaction label mapping...")
 
     labels = {}
+    transaction_dt = {}
 
-    for transaction_id, fraud_label in zip(
+    for transaction_id, fraud_label, dt in zip(
         df["TransactionID"],
-        df["isFraud"]
+        df["isFraud"],
+        df["TransactionDT"]
     ):
 
         node_id = (
@@ -123,6 +125,8 @@ def create_label_mapping(df):
         labels[node_id] = int(
             fraud_label
         )
+
+        transaction_dt[node_id] = float(dt)
 
     print(
         "Transaction labels created:",
@@ -143,13 +147,14 @@ def create_label_mapping(df):
         len(labels) - fraud_count
     )
 
-    return labels
+    return labels, transaction_dt
 
 
 def attach_labels(
     pyg_graph,
     nx_graph,
-    label_mapping
+    label_mapping,
+    dt_mapping
 ):
 
     print("\nAttaching transaction labels...")
@@ -170,6 +175,11 @@ def attach_labels(
         dtype=torch.long
     )
 
+    transaction_dt = torch.zeros(
+        pyg_graph.num_nodes,
+        dtype=torch.float
+    )
+
     transaction_mask = torch.zeros(
         pyg_graph.num_nodes,
         dtype=torch.bool
@@ -187,6 +197,8 @@ def attach_labels(
             label = label_mapping[node]
 
             y[idx] = label
+
+            transaction_dt[idx] = dt_mapping[node]
 
             transaction_count += 1
             fraud_count += label
@@ -221,6 +233,10 @@ def attach_labels(
         transaction_mask
     )
 
+    pyg_graph.transaction_dt = (
+        transaction_dt
+    )
+
     print(
         "Transaction nodes:",
         transaction_count
@@ -247,8 +263,17 @@ def attach_labels(
 def create_masks(graph):
 
     print(
-        "\nCreating stratified transaction masks..."
+        "\nCreating chronological transaction masks..."
     )
+
+    # FIX (mentor review item 4): this used to be a RANDOM stratified
+    # 70/15/15 split via sklearn's train_test_split(). IEEE-CIS is a
+    # time-ordered fraud dataset (TransactionDT) -- a random split puts
+    # future transactions in training and past transactions in test,
+    # which is optimistic versus how the model will actually be used in
+    # production (only the past is ever available to train on). The
+    # split below sorts by TransactionDT and assigns the earliest period
+    # to train, the next to validation, and the most recent to test.
 
     transaction_indices = (
         graph.transaction_mask
@@ -260,6 +285,14 @@ def create_masks(graph):
 
     transaction_labels = (
         graph.y[
+            graph.transaction_mask
+        ]
+        .cpu()
+        .numpy()
+    )
+
+    transaction_timestamps = (
+        graph.transaction_dt[
             graph.transaction_mask
         ]
         .cpu()
@@ -281,31 +314,28 @@ def create_masks(graph):
             "have different lengths."
         )
 
-    # 70% train, 15% validation, 15% test
-    train_idx, temp_idx = train_test_split(
-        transaction_indices,
-        test_size=0.30,
-        random_state=42,
-        stratify=transaction_labels
-    )
+    # Sort by TransactionDT ascending -- earliest transaction first.
+    chronological_order = transaction_timestamps.argsort()
 
-    temp_labels = (
-        graph.y[
-            torch.tensor(
-                temp_idx,
-                dtype=torch.long
-            )
-        ]
-        .cpu()
-        .numpy()
-    )
+    sorted_node_indices = transaction_indices[chronological_order]
+    sorted_labels = transaction_labels[chronological_order]
+    sorted_timestamps = transaction_timestamps[chronological_order]
 
-    val_idx, test_idx = train_test_split(
-        temp_idx,
-        test_size=0.50,
-        random_state=42,
-        stratify=temp_labels
-    )
+    n = len(sorted_node_indices)
+    train_end = int(0.70 * n)
+    val_end = train_end + int(0.15 * n)
+
+    train_idx = sorted_node_indices[:train_end]
+    val_idx = sorted_node_indices[train_end:val_end]
+    test_idx = sorted_node_indices[val_end:]
+
+    train_dt = sorted_timestamps[:train_end]
+    val_dt = sorted_timestamps[train_end:val_end]
+    test_dt = sorted_timestamps[val_end:]
+
+    train_labels = sorted_labels[:train_end]
+    val_labels = sorted_labels[train_end:val_end]
+    test_labels = sorted_labels[val_end:]
 
     num_nodes = graph.num_nodes
 
@@ -404,6 +434,27 @@ def create_masks(graph):
             "Validation and test masks overlap."
         )
 
+    # Chronological ordering must hold: no split may contain a
+    # transaction from AFTER any transaction in a later split.
+
+    if len(train_dt) and len(val_dt):
+
+        if train_dt.max() > val_dt.min():
+
+            raise ValueError(
+                "Chronological leakage detected: a training transaction "
+                "occurs after a validation transaction."
+            )
+
+    if len(val_dt) and len(test_dt):
+
+        if val_dt.max() > test_dt.min():
+
+            raise ValueError(
+                "Chronological leakage detected: a validation transaction "
+                "occurs after a test transaction."
+            )
+
     print(
         "Train:",
         graph.train_mask.sum().item()
@@ -435,6 +486,37 @@ def create_masks(graph):
         ).sum().item()
     )
 
+    print("\nChronological split boundaries (TransactionDT):")
+
+    print(
+        f"  Train      : {train_dt.min():.0f} -> {train_dt.max():.0f}"
+        if len(train_dt) else "  Train      : (empty)"
+    )
+
+    print(
+        f"  Validation : {val_dt.min():.0f} -> {val_dt.max():.0f}"
+        if len(val_dt) else "  Validation : (empty)"
+    )
+
+    print(
+        f"  Test       : {test_dt.min():.0f} -> {test_dt.max():.0f}"
+        if len(test_dt) else "  Test       : (empty)"
+    )
+
+    print("\nClass counts per split:")
+
+    print(
+        f"  Train      : fraud={train_labels.sum()}  legit={len(train_labels) - train_labels.sum()}"
+    )
+
+    print(
+        f"  Validation : fraud={val_labels.sum()}  legit={len(val_labels) - val_labels.sum()}"
+    )
+
+    print(
+        f"  Test       : fraud={test_labels.sum()}  legit={len(test_labels) - test_labels.sum()}"
+    )
+
     return graph
 
 
@@ -450,14 +532,15 @@ def main():
 
     df = load_labels()
 
-    label_mapping = create_label_mapping(
+    label_mapping, dt_mapping = create_label_mapping(
         df
     )
 
     pyg_graph = attach_labels(
         pyg_graph,
         nx_graph,
-        label_mapping
+        label_mapping,
+        dt_mapping
     )
 
     pyg_graph = create_masks(

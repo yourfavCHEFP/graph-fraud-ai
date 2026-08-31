@@ -1,0 +1,17 @@
+PHASE 10.7 GRAPHSAGE IMPROVED EVALUATION
+============================================================
+
+ROC-AUC: 0.658210
+PR-AUC: 0.073152
+Precision: 0.136601
+Recall: 0.160052
+F1: 0.147400
+Threshold: 0.171000
+
+Confusion Matrix:
+[[82347  3135]
+ [ 2603   496]]
+
+Checkpoint:
+Best epoch: 94
+Best validation PR-AUC: 0.07550021482872826

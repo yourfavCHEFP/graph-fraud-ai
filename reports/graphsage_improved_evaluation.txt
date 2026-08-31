@@ -1,17 +1,14 @@
-PHASE 10.7 GRAPHSAGE IMPROVED EVALUATION
-============================================================
+PENDING REGENERATION
 
-ROC-AUC: 0.658210
-PR-AUC: 0.073152
-Precision: 0.136601
-Recall: 0.160052
-F1: 0.147400
-Threshold: 0.171000
+The previous contents of this file (Phase 10.7 results) were computed
+against a feature pipeline with a column-alignment bug (see
+src/features/graph_features.py -- fixed) and a random, non-chronological
+train/val/test split (see src/graph/prepare_gnn_dataset.py -- fixed).
+Those numbers are archived at:
 
-Confusion Matrix:
-[[82347  3135]
- [ 2603   496]]
+    reports/archive/graphsage_improved_evaluation_phase_10_7.txt
 
-Checkpoint:
-Best epoch: 94
-Best validation PR-AUC: 0.07550021482872826
+Do not treat the archived numbers as representative of the corrected
+model. Regenerate this file by retraining against the corrected
+pipeline and re-running evaluation -- do not hand-edit numbers into
+this file.

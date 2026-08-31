@@ -26,8 +26,20 @@ curl -X POST https://YOUR-URL.onrender.com/predict \
 
 Deploy deployment/streamlit/app.py.
 
-Set API URL to:
-https://YOUR-RENDER-URL.onrender.com
+Set API URL to (must include the `/predict` path -- the client posts
+directly to this URL, so a bare host produces a 405):
+
+https://YOUR-RENDER-URL.onrender.com/predict
 
 Install:
 pip install -r deployment/streamlit/requirements.txt
+
+Note: the checkpoint's own tuned `validation_threshold` (currently 0.26)
+governs predictions by default -- do not set `FRAUD_THRESHOLD_OVERRIDE`
+on the Render side unless you deliberately want production to use a
+different threshold than the one the evaluated metrics were computed at.
+
+The currently-recommended primary live demo is Streamlit Community
+Cloud (this app, pointed at the Render API above). See
+docs/deployment/hosting.md for the full picture across all three
+deployment targets (Render/FastAPI, Streamlit Cloud, Hugging Face Space).

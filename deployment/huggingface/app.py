@@ -9,6 +9,8 @@ This app implements the "Bridge" architecture where the production demo
 runs entirely in-process for stability and performance on HF Spaces.
 """
 
+import time
+
 import matplotlib.pyplot as plt
 import networkx as nx
 import streamlit as st
@@ -77,7 +79,7 @@ if isinstance(predictor, str):
     st.sidebar.error(f"Initialization Failed: {predictor}")
     st.stop()
 else:
-    num_nodes = predictor.graph.x.shape[0]
+    num_nodes = predictor.num_nodes
     st.sidebar.success(f"Model Ready: {predictor.model_name}")
     st.sidebar.info(f"Graph Scale: {num_nodes:,} nodes")
     st.sidebar.divider()
@@ -113,10 +115,10 @@ def main():
         st.markdown('<div class="prediction-card">', unsafe_allow_html=True)
         st.subheader("Pipeline Details")
         st.json({
-            "Stage 1": "Subgraph Extraction",
-            "Stage 2": "Feature Normalization",
-            "Stage 3": "GraphSAGE Aggregation",
-            "Stage 4": "Explainability (Reasoner)",
+            "Stage 1": "Startup Graph Initialization",
+            "Stage 2": "Full-Graph GraphSAGE Scoring (once, at startup)",
+            "Stage 3": "Transaction Probability Lookup (per request)",
+            "Stage 4": "Local Neighborhood Context (per request)",
             "Status": "Healthy"
         })
         st.markdown('</div>', unsafe_allow_html=True)
@@ -125,7 +127,9 @@ def main():
         if analyze_btn:
             with st.spinner("Processing relational patterns..."):
                 try:
+                    start_time = time.perf_counter()
                     result = predictor.predict_transaction(int(transaction_id))
+                    elapsed_ms = (time.perf_counter() - start_time) * 1000
                     
                     # Result Metrics
                     m_col1, m_col2, m_col3 = st.columns(3)
@@ -134,7 +138,7 @@ def main():
                     
                     m_col1.markdown(f'<p class="metric-label">Decision</p><p class="metric-value" style="color:{color}">{result["prediction"].upper()}</p>', unsafe_allow_html=True)
                     m_col2.markdown(f'<p class="metric-label">Fraud Probability</p><p class="metric-value">{result["fraud_probability"]:.2%}</p>', unsafe_allow_html=True)
-                    m_col3.markdown(f'<p class="metric-label">Inference Time</p><p class="metric-value">~12ms</p>', unsafe_allow_html=True)
+                    m_col3.markdown(f'<p class="metric-label">Lookup Time</p><p class="metric-value">{elapsed_ms:.1f}ms</p>', unsafe_allow_html=True)
                     
                     st.divider()
                     
@@ -191,7 +195,6 @@ def main():
         else:
             # Placeholder State
             st.info("👈 Enter a Transaction ID and click 'Run Inference' to see the graph analysis.")
-            st.image("https://raw.githubusercontent.com/yourfavCHEFP/graph-fraud-ai/main/reports/figures/gnn_explanation.png", caption="Model Attribution Heatmap Example")
 
 if __name__ == "__main__":
     main()

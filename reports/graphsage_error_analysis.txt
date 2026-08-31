@@ -1,30 +1,5 @@
-PHASE 10.8 GRAPHSAGE ERROR ANALYSIS
-Validation Threshold: 0.2600
-True Negatives: 75,939
-False Positives: 9,543
-False Negatives: 1,929
-True Positives: 1,170
-Precision: 0.1092
-Recall: 0.3775
-F1: 0.1694
-Feature Count: 16
+PENDING REGENERATION
 
-Feature Names:
-0: transaction_amount
-1: log_card_degree
-2: log_email_degree
-3: log_device_degree
-4: log_address_degree
-5: entity_degree_mean
-6: entity_degree_max
-7: entity_degree_min
-8: entity_degree_std
-9: card_ratio
-10: email_ratio
-11: device_ratio
-12: address_ratio
-13: entity_concentration
-14: degree_imbalance
-15: hub_entity_count
-
-Error analysis completed successfully.
+Archived (pre-fix) version: reports/archive/graphsage_error_analysis_phase_10_8.txt
+Regenerate after retraining against the corrected feature pipeline and
+chronological split -- see reports/graphsage_improved_evaluation.txt.

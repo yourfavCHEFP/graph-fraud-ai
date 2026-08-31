@@ -27,5 +27,11 @@ services:
       - key: GRAPH_PATH
         value: data/graph/fraud_graph_ready.pt
 
-      - key: DEFAULT_FRAUD_THRESHOLD
-        value: "0.5"
+      # No FRAUD_THRESHOLD_OVERRIDE set: the checkpoint's own
+      # validation_threshold is authoritative (see src/inference/predictor.py).
+      # Previously this had DEFAULT_FRAUD_THRESHOLD=0.5, which silently
+      # overrode the checkpoint's real tuned threshold (0.26) -- meaning
+      # production was NOT using the threshold the evaluated metrics were
+      # computed at. Only set FRAUD_THRESHOLD_OVERRIDE here if you have a
+      # deliberate, documented operational reason to deviate from the
+      # checkpoint's tuned value.

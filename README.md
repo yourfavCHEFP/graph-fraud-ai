@@ -34,6 +34,16 @@ Streamlit / hosted demo
 
 ## Test performance
 
+> **Note:** these metrics were recorded before two corrective fixes:
+> (1) a feature-column misalignment bug where the model was trained on
+> features whose names did not match their actual values, and (2) the
+> switch from a random to a chronological train/val/test split (IEEE-CIS
+> is time-ordered; a random split leaks future transactions into
+> training). **These numbers are known-stale and pending regeneration**
+> after retraining against the corrected pipeline -- see
+> `reports/archive/` for how they were produced, and do not treat them
+> as representative of the corrected model.
+
 | Metric | Value |
 |---|---:|
 | ROC-AUC | 0.6760 |
@@ -43,6 +53,25 @@ Streamlit / hosted demo
 | F1 | 0.1694 |
 
 These metrics are the recorded benchmark results in the repository registry; they should not be interpreted as a guarantee of production performance.
+
+## Prediction threshold policy
+
+The deployed model uses the checkpoint's own tuned `validation_threshold`
+by default (currently 0.26, not the conventional 0.5). An operator can
+override this via the `FRAUD_THRESHOLD_OVERRIDE` environment variable,
+but doing so means production predictions will differ from the
+threshold the evaluated metrics above were computed at -- leave it unset
+unless that's a deliberate, understood tradeoff.
+
+## What "explanation" currently means
+
+The API's `explanation` field is threshold-based reasoning (fraud
+probability vs. threshold) plus local graph neighborhood context (the
+transaction's directly-connected entity nodes) -- it is **not** formal
+feature attribution (e.g. SHAP/integrated gradients). Prediction itself
+is a full-graph GraphSAGE forward pass computed ONCE at service startup;
+each `/predict` call looks up that node's precomputed probability rather
+than running fresh per-request inference.
 
 ## API
 
@@ -66,6 +95,15 @@ Prediction request:
 
 ## Dashboard
 
+The **primary, currently-recommended live demo is Streamlit Community
+Cloud** (`deployment/streamlit/`). A Hugging Face Space
+(`deployment/huggingface/`) also runs the same model in-process. The
+FastAPI + Render deployment (`deployment/fastapi/`) exists and is
+maintained, but treat it as the production-architecture reference
+implementation rather than the guaranteed-always-up public link --
+Render's free tier is memory-constrained for this model's full-graph
+startup cost (see `docs/deployment/production-runbook.md`).
+
 ```bash
 streamlit run deployment/streamlit/app.py
 ```
@@ -80,10 +118,20 @@ docker compose up --build
 
 ## Deployment prerequisites
 
-The source repository intentionally excludes large runtime artifacts. Before starting the API, provide:
+The champion checkpoint and graph artifact are committed to this
+repository **via Git LFS** (not excluded -- see `.gitattributes`).
+A plain `git clone` without Git LFS support installed will check out
+small text pointer files instead of the real binaries; verify with:
 
-- `models/graphsage_improved.pt`
-- `data/graph/fraud_graph_ready.pt`
+```bash
+head -c 100 models/production/graphsage_improved.pt
+head -c 100 data/graph/fraud_graph_ready.pt
+```
+
+If either prints `version https://git-lfs.github.com/spec/v1...` instead
+of binary content, Git LFS did not actually fetch the real file in that
+environment -- the API will fail loudly at startup in that case (see
+`src/inference/predictor.py`'s LFS pointer check), not silently.
 
 Run the source-level audit with:
 
