@@ -1,49 +1,60 @@
 {
-    "project": "Graph Fraud AI",
-    "production_model": {
-        "name": "graphsage_improved",
-        "architecture": "GraphSAGE",
-        "checkpoint": "models/production/graphsage_improved.pt",
-        "status": "champion"
+  "production_model": {
+    "name": "graphsage_improved",
+    "checkpoint": "models/production/graphsage_improved.pt",
+    "architecture": "GraphSAGE",
+    "hidden_dim": 64,
+    "dropout": 0.3,
+    "input_dim": 16
+  },
+  "training": {
+    "seed": 42,
+    "best_epoch": 99,
+    "learning_rate": 0.0005,
+    "weight_decay": 0.0005,
+    "fraud_class_weight": 5.0
+  },
+  "feature_pipeline_version": "2026-08-31-column-alignment-fix",
+  "feature_names": [
+    "transaction_amount",
+    "log_card_degree",
+    "log_email_degree",
+    "log_device_degree",
+    "log_address_degree",
+    "entity_degree_mean",
+    "entity_degree_max",
+    "entity_degree_min",
+    "entity_degree_std",
+    "card_ratio",
+    "email_ratio",
+    "device_ratio",
+    "address_ratio",
+    "entity_concentration",
+    "degree_imbalance",
+    "hub_entity_count"
+  ],
+  "split_strategy": "random_stratified_LEGACY_not_chronological",
+  "validation_metrics": {
+    "roc_auc": 0.6874462104576342,
+    "pr_auc": 0.08141362402757105,
+    "f1": 0.16061013907581875,
+    "threshold": 0.38
+  },
+  "test_metrics": {
+    "roc_auc": 0.6842,
+    "pr_auc": 0.0786,
+    "precision": 0.1367,
+    "recall": 0.1578,
+    "f1": 0.1465,
+    "threshold": 0.38,
+    "confusion_matrix": {
+      "tn": 82394,
+      "fp": 3088,
+      "fn": 2610,
+      "tp": 489
     },
-    "task": {
-        "type": "binary_node_classification",
-        "problem": "financial_transaction_fraud_detection",
-        "dataset": "IEEE-CIS Fraud Detection"
-    },
-    "feature_pipeline": {
-        "version": "phase_10.9",
-        "feature_count": 16,
-        "leakage_safe": true
-    },
-    "performance": {
-        "validation": {
-            "roc_auc": 0.6769,
-            "pr_auc": 0.0834,
-            "f1": 0.1696
-        },
-        "test": {
-            "roc_auc": 0.676,
-            "pr_auc": 0.0821,
-            "precision": 0.1092,
-            "recall": 0.3775,
-            "f1": 0.1694
-        }
-    },
-    "training_configuration": {
-        "hidden_dimension": 64,
-        "dropout": 0.3,
-        "learning_rate": 0.0005,
-        "weight_decay": 0.0005,
-        "epochs": 100,
-        "early_stopping": true
-    },
-    "model_selection": {
-        "benchmark_phase": "11.1",
-        "architecture_selected": "GraphSAGE",
-        "reason": "GraphSAGE achieved the highest PR-AUC among tested GNN architectures."
-    },
-    "deployment_ready": false,
-    "deployment_phase": "17-20",
-    "deployment_note": "Source-level deployment hardening complete; runtime readiness requires model and graph artifacts."
+    "test_transaction_count": 88581
+  },
+  "deployment_ready": true,
+  "deployment_note": "Retrained against the corrected feature pipeline (feature-column alignment bug fixed, see feature_pipeline_version). KNOWN LIMITATION: split_strategy is still the original random-stratified split, not chronological -- TransactionDT was not available in the graph artifact used for this retrain, so the item-4 chronological-split fix could not be applied here. Metrics above are real (test-set evaluated), but should be treated as optimistic relative to a true chronological evaluation, per the known temporal-leakage risk."
 }

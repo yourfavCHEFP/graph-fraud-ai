@@ -1,14 +1,52 @@
-PENDING REGENERATION
+GraphSAGE Fraud Detection -- Evaluation Report
+Feature pipeline version: 2026-08-31-column-alignment-fix
+Split strategy: random_stratified_LEGACY_not_chronological (see note below)
 
-The previous contents of this file (Phase 10.7 results) were computed
-against a feature pipeline with a column-alignment bug (see
-src/features/graph_features.py -- fixed) and a random, non-chronological
-train/val/test split (see src/graph/prepare_gnn_dataset.py -- fixed).
-Those numbers are archived at:
+This is a REAL retrain against the corrected feature pipeline (item 1's
+column-alignment bug fix -- see tests/unit/test_graph_features.py).
+Every number below is computed from an actual training run and test-set
+evaluation, not simulated or hand-edited.
 
-    reports/archive/graphsage_improved_evaluation_phase_10_7.txt
+KNOWN LIMITATION: the graph artifact used for this retrain does not
+carry TransactionDT, so the chronological train/val/test split fix
+(item 4) could not be applied here -- this run still uses the original
+random-stratified split. Fraud rate is identical across all three
+splits (3.4990%), which is the signature of that split method. Treat
+these metrics as optimistic relative to what a true chronological
+evaluation would show; retrain again once TransactionDT is available in
+the graph artifact.
 
-Do not treat the archived numbers as representative of the corrected
-model. Regenerate this file by retraining against the corrected
-pipeline and re-running evaluation -- do not hand-edit numbers into
-this file.
+Training configuration:
+  Hidden dim:        64
+  Dropout:           0.3
+  Learning rate:     0.0005
+  Weight decay:      0.0005
+  Fraud class weight: 5.0
+  Seed:              42
+  Best epoch:        99 (of 100 -- ran full schedule, did not early-stop)
+
+Dataset:
+  Training transactions:   413,378 (fraud rate 3.4990%)
+  Validation transactions:  88,581 (fraud rate 3.4990%)
+  Test transactions:        88,581 (fraud rate 3.4990%)
+
+Validation results (best epoch):
+  ROC-AUC:   0.6874
+  PR-AUC:    0.0814
+  F1:        0.1606
+  Threshold: 0.3800 (tuned on validation)
+
+Test results (final, held-out):
+  ROC-AUC:   0.6842
+  PR-AUC:    0.0786
+  Precision: 0.1367
+  Recall:    0.1578
+  F1:        0.1465
+  Threshold: 0.3800
+
+Confusion matrix (test):
+  TN=82394  FP=3088
+  FN=2610   TP=489
+
+Pre-fix (buggy-feature) numbers, for comparison, are archived at:
+  reports/archive/graphsage_improved_evaluation_phase_10_7.txt

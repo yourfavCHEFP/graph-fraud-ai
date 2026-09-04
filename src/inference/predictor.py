@@ -82,8 +82,8 @@ def _validate_checkpoint_contract(checkpoint: dict, graph_feature_dim: int) -> N
             f"from this pairing. Retrain against the current pipeline."
         )
 
-    mean_len = len(checkpoint["normalization_mean"])
-    std_len = len(checkpoint["normalization_std"])
+    mean_len = checkpoint["normalization_mean"].numel()
+    std_len = checkpoint["normalization_std"].numel()
     if mean_len != input_dim or std_len != input_dim:
         raise ValueError(
             f"Checkpoint normalization_mean/std length ({mean_len}/{std_len}) "

@@ -1,2 +1,5 @@
-model,roc_auc,pr_auc,precision,recall,f1
-# PENDING REGENERATION -- see reports/archive/gnn_benchmark_results_phase_11_1.csv for the pre-fix values, and reports/graphsage_improved_evaluation.txt for why they're stale.
+model,roc_auc,pr_auc,precision,recall,f1,split_strategy,feature_pipeline_version
+GraphSAGE,0.6842,0.0786,0.1367,0.1578,0.1465,random_stratified_LEGACY_not_chronological,2026-08-31-column-alignment-fix
+# NOTE: GCN and GAT were NOT retrained in this pass -- only GraphSAGE
+# (the registered production champion). Retrain those separately if a
+# full architecture comparison against the corrected pipeline is needed.

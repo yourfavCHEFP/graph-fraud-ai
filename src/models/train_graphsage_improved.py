@@ -50,7 +50,19 @@ GRAPH_PATH = "data/graph/fraud_graph_ready.pt"
 
 MODEL_DIR = "models"
 
-MODEL_PATH = "models/graphsage_improved.pt"
+MODEL_PATH = "models/production/graphsage_improved.pt"
+
+FEATURE_PIPELINE_VERSION = "2026-08-31-column-alignment-fix"
+
+# HONEST LIMITATION: this graph's train/val/test masks are the ORIGINAL
+# random-stratified split (see prepare_gnn_dataset.py's chronological
+# split fix -- that fix requires TransactionDT per node, which is not
+# present in this graph artifact). Retraining here fixes the item-1
+# feature-column bug (a real, severe issue -- see
+# tests/unit/test_graph_features.py), but does NOT yet fix the item-4
+# temporal-leakage issue. Both facts are recorded in the checkpoint
+# below so nothing downstream has to guess or re-derive this.
+SPLIT_STRATEGY = "random_stratified_LEGACY_not_chronological"
 
 
 # ============================================================
@@ -578,6 +590,8 @@ def main():
         "validation_threshold": validation_threshold,
         "validation_f1": val_f1,
         "feature_names": feature_names,
+        "feature_pipeline_version": FEATURE_PIPELINE_VERSION,
+        "split_strategy": SPLIT_STRATEGY,
         "normalization_mean": normalization_mean.cpu(),
         "normalization_std": normalization_std.cpu(),
     }
