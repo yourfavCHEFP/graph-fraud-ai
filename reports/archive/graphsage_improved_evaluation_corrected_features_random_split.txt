@@ -1,0 +1,11 @@
+INTERMEDIATE RUN -- corrected features (item 1), but still the LEGACY
+random-stratified split (item 4 not yet applied -- TransactionDT was
+not available at the time this run was made). Superseded by
+reports/graphsage_improved_evaluation.txt (fully corrected).
+
+Test ROC-AUC:   0.6842
+Test PR-AUC:    0.0786
+Test Precision: 0.1367
+Test Recall:    0.1578
+Test F1:        0.1465
+Threshold:      0.380

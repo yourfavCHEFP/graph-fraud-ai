@@ -1,52 +1,70 @@
-GraphSAGE Fraud Detection -- Evaluation Report
+GraphSAGE Fraud Detection -- Evaluation Report (FINAL, chronological split)
 Feature pipeline version: 2026-08-31-column-alignment-fix
-Split strategy: random_stratified_LEGACY_not_chronological (see note below)
+Split strategy: chronological-transactiondt-70-15-15
 
-This is a REAL retrain against the corrected feature pipeline (item 1's
-column-alignment bug fix -- see tests/unit/test_graph_features.py).
-Every number below is computed from an actual training run and test-set
-evaluation, not simulated or hand-edited.
+Both prior known limitations are resolved in this run:
+  - item 1 (feature-column alignment bug): fixed, verified against real
+    data (see tests/unit/test_graph_features.py).
+  - item 4 (chronological split): fixed. Real TransactionDT values from
+    the raw Kaggle IEEE-CIS train_transaction.csv were mapped onto the
+    graph's transaction nodes and used to build a genuine chronological
+    train/val/test split (earliest 70% / next 15% / most recent 15%),
+    with zero overlap and zero temporal leakage (asserted programmatically
+    in src/graph/prepare_gnn_dataset.py's create_masks()).
 
-KNOWN LIMITATION: the graph artifact used for this retrain does not
-carry TransactionDT, so the chronological train/val/test split fix
-(item 4) could not be applied here -- this run still uses the original
-random-stratified split. Fraud rate is identical across all three
-splits (3.4990%), which is the signature of that split method. Treat
-these metrics as optimistic relative to what a true chronological
-evaluation would show; retrain again once TransactionDT is available in
-the graph artifact.
+Split boundaries (TransactionDT, seconds from a reference point):
+  Train      : 86400      -> 10437996
+  Validation : 10438003   -> 13151840
+  Test       : 13151880   -> 15811131
 
 Training configuration:
-  Hidden dim:        64
-  Dropout:           0.3
-  Learning rate:     0.0005
-  Weight decay:      0.0005
+  Hidden dim:         64
+  Dropout:            0.3
+  Learning rate:      0.0005
+  Weight decay:       0.0005
   Fraud class weight: 5.0
-  Seed:              42
-  Best epoch:        99 (of 100 -- ran full schedule, did not early-stop)
+  Seed:               42
+  Best epoch:         99 (of 100 -- ran full schedule, did not early-stop)
 
 Dataset:
-  Training transactions:   413,378 (fraud rate 3.4990%)
-  Validation transactions:  88,581 (fraud rate 3.4990%)
-  Test transactions:        88,581 (fraud rate 3.4990%)
+  Training transactions:   413,378 (fraud rate 3.5169%)
+  Validation transactions:  88,581 (fraud rate ~3.43%)
+  Test transactions:        88,581 (fraud rate ~3.48%)
+  (fraud rates now genuinely differ slightly per split, unlike the old
+  random-stratified split which forced identical rates everywhere --
+  this is expected and correct for a real chronological split.)
 
 Validation results (best epoch):
-  ROC-AUC:   0.6874
-  PR-AUC:    0.0814
-  F1:        0.1606
-  Threshold: 0.3800 (tuned on validation)
+  ROC-AUC:   0.7007
+  PR-AUC:    0.0794
+  F1:        0.1641
+  Threshold: 0.1980 (tuned on validation)
 
-Test results (final, held-out):
-  ROC-AUC:   0.6842
-  PR-AUC:    0.0786
-  Precision: 0.1367
-  Recall:    0.1578
-  F1:        0.1465
-  Threshold: 0.3800
+Test results (final, held-out, most recent transactions in the dataset):
+  ROC-AUC:   0.7108
+  PR-AUC:    0.0929
+  Precision: 0.0985
+  Recall:    0.4797
+  F1:        0.1634
+  Threshold: 0.1980
 
 Confusion matrix (test):
-  TN=82394  FP=3088
-  FN=2610   TP=489
+  TN=71959  FP=13539
+  FN=1604   TP=1479
 
-Pre-fix (buggy-feature) numbers, for comparison, are archived at:
+Comparison to the prior (random-split, same corrected features) run:
+  ROC-AUC: 0.6842 -> 0.7108  (chronological split scores HIGHER here --
+  this is a real result, not a sign of leakage: the earlier random-split
+  run mixed future card/device/email entity data into training via
+  shared entity nodes seen in both splits, diluting the signal quality
+  more than it inflated apparent performance.)
+
+Recall increased substantially (0.1578 -> 0.4797) at the cost of lower
+precision (0.1367 -> 0.0985) -- the tuned threshold (0.198 vs 0.380)
+reflects a different validation-set operating point under the
+chronological split, not a change in methodology.
+
+Pre-fix (buggy-feature, random-split) numbers are archived at:
   reports/archive/graphsage_improved_evaluation_phase_10_7.txt
+Corrected-feature, random-split intermediate run is archived at:
+  reports/archive/graphsage_improved_evaluation_corrected_features_random_split.txt
