@@ -2,6 +2,14 @@
 
 A production-oriented graph neural network fraud detection system built on the IEEE-CIS Fraud Detection dataset. The system models transaction relationships, engineers leakage-safe graph features, benchmarks GCN/GAT/GraphSAGE, selects GraphSAGE as the champion, and exposes transaction-level inference through FastAPI and Streamlit.
 
+![Python](https://img.shields.io/badge/Python-3.11%2B-blue)
+![PyTorch](https://img.shields.io/badge/PyTorch-Deep%20Learning-orange)
+![PyG](https://img.shields.io/badge/PyTorch%20Geometric-GNN-purple)
+![REBOUND](https://img.shields.io/badge/REBOUND-N--Body%20Simulation-green)
+![Tests](https://img.shields.io/badge/tests-pytest-red)
+![Status](https://img.shields.io/badge/status-complete-brightgreen)
+
+
 ## Architecture
 
 ```text
