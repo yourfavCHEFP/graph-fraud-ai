@@ -29,7 +29,6 @@ Output:
 
 import os
 
-import numpy as np
 import torch
 from sklearn.metrics import (
     average_precision_score,
@@ -45,6 +44,7 @@ from src.models.gnn_model import (
     FraudGCN,
     FraudGraphSAGE,
 )
+from src.training.thresholds import find_best_threshold
 
 # ============================================================
 # CONFIGURATION
@@ -173,48 +173,6 @@ def load_model(
     model.eval()
 
     return model
-
-
-# ============================================================
-# FIND BEST F1 THRESHOLD
-# ============================================================
-
-
-def find_best_threshold(
-    y_true,
-    probabilities,
-):
-
-    best_threshold = 0.5
-
-    best_f1 = 0.0
-
-    thresholds = np.linspace(
-        0.001,
-        0.999,
-        999,
-    )
-
-    for threshold in thresholds:
-
-        predictions = (probabilities >= threshold).astype(int)
-
-        current_f1 = f1_score(
-            y_true,
-            predictions,
-            zero_division=0,
-        )
-
-        if current_f1 > best_f1:
-
-            best_f1 = current_f1
-
-            best_threshold = float(threshold)
-
-    return (
-        best_threshold,
-        best_f1,
-    )
 
 
 # ============================================================

@@ -12,11 +12,15 @@ running service does (registry + env vars), not a separate hardcoded
 path that could silently drift from what's actually served.
 """
 
-import json
-import os
+import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
+
+from src.config import Settings  # noqa: E402
+from src.inference.contracts import RegistryDocument  # noqa: E402
 
 REQUIRED_SOURCE_FILES = [
     "README.md",
@@ -56,28 +60,22 @@ def main():
         for item in missing_source:
             print(f"  - {item}")
 
-    registry_path = ROOT / "models/registry/model_registry.json"
+    settings = Settings.from_env(base_dir=ROOT)
+    registry_path = settings.model_registry_path
     if not registry_path.exists():
         print("Registry: MISSING -- cannot check artifact paths.")
         raise SystemExit(1)
 
-    registry = json.loads(registry_path.read_text())
+    registry = RegistryDocument.model_validate_json(registry_path.read_text())
 
-    # Same resolution order as src/inference/predictor.py -- env var
-    # override, falling back to the registry's declared path. Checking
-    # a different hardcoded path here would let this audit pass while
-    # the actual running service points somewhere else entirely.
-    checkpoint_path = Path(
-        os.getenv("MODEL_CHECKPOINT_PATH", registry["production_model"]["checkpoint"])
+    # Same resolution order as src/inference/predictor.py.
+    checkpoint_path = settings.model_checkpoint_path or settings.resolve_path(
+        registry.production_model.checkpoint
     )
-    if not checkpoint_path.is_absolute():
-        checkpoint_path = ROOT / checkpoint_path
 
-    graph_path = Path(os.getenv("GRAPH_PATH", "data/graph/fraud_graph_ready.pt"))
-    if not graph_path.is_absolute():
-        graph_path = ROOT / graph_path
+    graph_path = settings.graph_path
 
-    print(f"Champion: {registry['production_model']['name']}")
+    print(f"Champion: {registry.production_model.name}")
 
     checkpoint_status = _artifact_status(checkpoint_path)
     graph_status = _artifact_status(graph_path)
@@ -96,10 +94,10 @@ def main():
             )
             ok = False
 
-    if registry.get("deployment_ready") is False:
+    if registry.deployment_ready is False:
         print(
             "  [WARNING] Registry declares deployment_ready=false: "
-            f"{registry.get('deployment_note', '(no note)')}"
+            f"{registry.deployment_note or '(no note)'}"
         )
 
     if not ok:

@@ -139,6 +139,20 @@ Run the source-level audit with:
 python scripts/check_deployment.py
 ```
 
+## Production validation status
+
+The active production path is currently in a stable state based on the repo-level checks we run for this project:
+
+- `make check` — passed (`ruff format --check`, `ruff check`, and `pytest -q`)
+- `python scripts/check_deployment.py` — passed
+
+Fresh validation result:
+
+- `pytest -q`: 27 passed, 1 warning
+- Deployment audit: passed
+
+The warning is a non-blocking Starlette deprecation notice from the test stack and does not indicate a project-level failure.
+
 ## Project phases
 
 - Phase 10.9 — leakage-safe graph feature engineering

@@ -63,6 +63,8 @@ No fraud labels are used.
 No global dataset statistics are used.
 """
 
+import logging
+
 import torch
 
 from src.graph.pyg_converter import FEATURE_COLUMNS
@@ -110,6 +112,7 @@ if _missing:
     )
 
 _SOURCE_INDEX = {name: FEATURE_COLUMNS.index(name) for name in _REQUIRED_SOURCE_COLUMNS}
+logger = logging.getLogger(__name__)
 
 
 def get_feature_names():
@@ -118,17 +121,11 @@ def get_feature_names():
 
 
 def build_graph_features(graph):
-
-    print("\n==============================")
-    print("BUILDING GRAPH FEATURES")
-    print("==============================")
+    logger.info("Building graph features")
 
     x = graph.x.float()
 
-    print(
-        "Original feature dimension:",
-        x.shape[1],
-    )
+    logger.info("Original feature dimension: %d", x.shape[1])
 
     if x.shape[1] != len(FEATURE_COLUMNS):
         raise AssertionError(
@@ -247,14 +244,7 @@ def build_graph_features(graph):
         dim=1,
     )
 
-    print(
-        "Enhanced feature dimension:",
-        features.shape[1],
-    )
-
-    print(
-        "Feature tensor:",
-        features.shape,
-    )
+    logger.info("Enhanced feature dimension: %d", features.shape[1])
+    logger.info("Feature tensor shape: %s", tuple(features.shape))
 
     return features

@@ -16,12 +16,12 @@ ever changes without this file being updated to match, this test fails
 loudly instead of silently producing wrong features again.
 """
 
-import torch
 import pytest
+import torch
 from torch_geometric.data import Data
 
-from src.graph.pyg_converter import FEATURE_COLUMNS
 from src.features.graph_features import build_graph_features, get_feature_names
+from src.graph.pyg_converter import FEATURE_COLUMNS
 
 
 @pytest.fixture
@@ -35,12 +35,12 @@ def synthetic_graph():
     values = {name: float(i * 10) for i, name in enumerate(FEATURE_COLUMNS)}
     # Override with values chosen so downstream math (log1p, ratios,
     # hub thresholds) produces distinguishable, sane numbers.
-    values["log_transaction_amount"] = 5.0   # this is what "amount" must equal
-    values["card_degree"] = 200.0            # >= 100 -> triggers hub_card
+    values["log_transaction_amount"] = 5.0  # this is what "amount" must equal
+    values["card_degree"] = 200.0  # >= 100 -> triggers hub_card
     values["email_degree"] = 3.0
     values["device_degree"] = 7.0
     values["address_degree"] = 2.0
-    values["node_type_id"] = 999.0           # must NEVER appear in any output feature
+    values["node_type_id"] = 999.0  # must NEVER appear in any output feature
 
     row = [values[name] for name in FEATURE_COLUMNS]
     x = torch.tensor([row], dtype=torch.float)
@@ -112,9 +112,7 @@ def test_no_engineered_feature_is_constant_across_varied_nodes():
 
     features = build_graph_features(graph)
     stds = features.std(dim=0)
-    constant_features = [
-        get_feature_names()[i] for i, s in enumerate(stds) if s.item() < 1e-8
-    ]
+    constant_features = [get_feature_names()[i] for i, s in enumerate(stds) if s.item() < 1e-8]
     assert not constant_features, (
         f"These features are constant across varied random input, which "
         f"suggests they're reading the wrong (or a degenerate) source "

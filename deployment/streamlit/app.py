@@ -2,7 +2,6 @@ import os
 
 import requests
 import streamlit as st
-
 from utils import predict_transaction
 
 st.set_page_config(page_title="Graph Fraud AI", page_icon="🛡️", layout="wide")

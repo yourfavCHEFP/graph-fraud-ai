@@ -24,9 +24,7 @@ No fraud labels are used during feature construction.
 """
 
 import os
-import random
 
-import numpy as np
 import pandas as pd
 import torch
 from sklearn.metrics import (
@@ -47,6 +45,7 @@ from src.models.gnn_model import (
     FraudGCN,
     FraudGraphSAGE,
 )
+from src.training.reproducibility import set_seed
 
 # ============================================================
 # CONFIG
@@ -81,19 +80,6 @@ DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 # ============================================================
 # REPRODUCIBILITY
 # ============================================================
-
-
-def set_seed():
-
-    random.seed(SEED)
-
-    np.random.seed(SEED)
-
-    torch.manual_seed(SEED)
-
-    if torch.cuda.is_available():
-
-        torch.cuda.manual_seed_all(SEED)
 
 
 # ============================================================
@@ -375,7 +361,7 @@ def main():
     print("PHASE 11.1 GNN BENCHMARK")
     print("==============================")
 
-    set_seed()
+    set_seed(SEED)
 
     print(f"\nDevice: {DEVICE}")
 

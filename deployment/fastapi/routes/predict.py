@@ -21,8 +21,9 @@ import logging
 
 from fastapi import APIRouter, Depends, HTTPException
 
-from deployment.fastapi.schemas import PredictionRequest, PredictionResponse
+from deployment.fastapi.schemas import PredictionRequest
 from deployment.fastapi.services.inference import get_predictor
+from src.inference.contracts import PredictionResponse
 
 logger = logging.getLogger("graph-fraud-api")
 
@@ -49,5 +50,8 @@ def predict(request: PredictionRequest, predictor=Depends(get_predictor)):
         # filesystem paths/internals), see FraudPredictor.predict_transaction.
         raise HTTPException(status_code=400, detail=str(exc)) from exc
     except Exception:
-        logger.exception("Unexpected failure in /predict for transaction_id=%s", request.transaction_id)
+        logger.exception(
+            "Unexpected failure in /predict for transaction_id=%s",
+            request.transaction_id,
+        )
         raise HTTPException(status_code=500, detail="Internal server error.")

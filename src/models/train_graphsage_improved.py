@@ -20,17 +20,14 @@ The checkpoint also stores:
 """
 
 import os
-import random
 
 import numpy as np
 import torch
 from sklearn.metrics import (
-    average_precision_score,
     confusion_matrix,
     f1_score,
     precision_score,
     recall_score,
-    roc_auc_score,
 )
 from torch import nn
 
@@ -41,6 +38,10 @@ from src.features.graph_features import (
 from src.models.gnn_model import (
     FraudGraphSAGE,
 )
+from src.training.metrics import calculate_split_metrics
+from src.training.normalization import normalize_features
+from src.training.reproducibility import set_seed
+from src.training.thresholds import find_best_threshold
 
 # ============================================================
 # PATHS
@@ -85,23 +86,6 @@ DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 # ============================================================
 
 
-def set_seed(seed=SEED):
-
-    random.seed(seed)
-
-    np.random.seed(seed)
-
-    torch.manual_seed(seed)
-
-    if torch.cuda.is_available():
-
-        torch.cuda.manual_seed_all(seed)
-
-    torch.backends.cudnn.deterministic = True
-
-    torch.backends.cudnn.benchmark = False
-
-
 # ============================================================
 # LOAD GRAPH
 # ============================================================
@@ -136,47 +120,6 @@ def load_graph():
 # ============================================================
 # NORMALIZE FEATURES
 # ============================================================
-
-
-def normalize_features(
-    graph,
-    features,
-):
-
-    print("\n==============================")
-    print("TRAINING-ONLY FEATURE NORMALIZATION")
-    print("==============================")
-
-    train_mask = graph.transaction_mask & graph.train_mask
-
-    train_features = features[train_mask]
-
-    if train_features.numel() == 0:
-
-        raise ValueError("No training transaction features found.")
-
-    mean = train_features.mean(
-        dim=0,
-        keepdim=True,
-    )
-
-    std = train_features.std(
-        dim=0,
-        keepdim=True,
-        unbiased=False,
-    )
-
-    std[std == 0] = 1.0
-
-    normalized_features = (features - mean) / std
-
-    print("Normalization statistics calculated " "from training transactions only.")
-
-    return (
-        normalized_features,
-        mean,
-        std,
-    )
 
 
 # ============================================================
@@ -225,64 +168,7 @@ def evaluate_split(
 
     y_prob = probability[mask].detach().cpu().numpy()
 
-    roc_auc = roc_auc_score(
-        y_true,
-        y_prob,
-    )
-
-    pr_auc = average_precision_score(
-        y_true,
-        y_prob,
-    )
-
-    return (
-        roc_auc,
-        pr_auc,
-        y_true,
-        y_prob,
-    )
-
-
-# ============================================================
-# FIND BEST THRESHOLD
-# ============================================================
-
-
-def find_best_threshold(
-    y_true,
-    y_prob,
-):
-
-    best_threshold = 0.5
-
-    best_f1 = 0.0
-
-    thresholds = np.linspace(
-        0.001,
-        0.999,
-        999,
-    )
-
-    for threshold in thresholds:
-
-        predictions = (y_prob >= threshold).astype(int)
-
-        current_f1 = f1_score(
-            y_true,
-            predictions,
-            zero_division=0,
-        )
-
-        if current_f1 > best_f1:
-
-            best_f1 = current_f1
-
-            best_threshold = float(threshold)
-
-    return (
-        best_threshold,
-        best_f1,
-    )
+    return calculate_split_metrics(y_true, y_prob)
 
 
 # ============================================================
@@ -296,7 +182,7 @@ def main():
     print("PHASE 10.6 IMPROVED GRAPHSAGE")
     print("==============================")
 
-    set_seed(SEED)
+    set_seed(SEED, deterministic=True)
 
     print(f"\nRandom seed: {SEED}")
 
@@ -360,8 +246,9 @@ def main():
         normalization_mean,
         normalization_std,
     ) = normalize_features(
-        graph,
         enhanced_features,
+        graph.transaction_mask & graph.train_mask,
+        unbiased=False,
     )
 
     graph.x = normalized_features

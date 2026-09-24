@@ -8,6 +8,7 @@ from fastapi import FastAPI, Response
 from fastapi.middleware.cors import CORSMiddleware
 
 from deployment.fastapi.routes.predict import router
+from src.inference.errors import InferenceConfigurationError
 from src.inference.predictor import FraudPredictor
 
 logger = logging.getLogger("graph-fraud-api")
@@ -26,9 +27,13 @@ async def lifespan(app: FastAPI):
     """
     try:
         logger.info("Initializing FraudPredictor at startup...")
-        app.state.predictor = FraudPredictor()
+        app.state.predictor = FraudPredictor.from_artifacts()
         app.state.startup_error = None
         logger.info("FraudPredictor ready: %s", app.state.predictor.model_name)
+    except InferenceConfigurationError:
+        logger.exception("Predictor configuration is invalid at startup")
+        app.state.predictor = None
+        app.state.startup_error = "Model configuration is invalid. See server logs."
     except Exception:
         # Full traceback logged server-side (logger.exception) -- callers
         # only ever see a generic message via /ready or /predict (see
@@ -53,9 +58,7 @@ def root():
 
 
 allow_origins = [
-    origin.strip()
-    for origin in os.getenv("ALLOW_ORIGINS", "*").split(",")
-    if origin.strip()
+    origin.strip() for origin in os.getenv("ALLOW_ORIGINS", "*").split(",") if origin.strip()
 ]
 
 app.add_middleware(
@@ -69,7 +72,13 @@ app.add_middleware(
 app.include_router(router)
 
 
-@app.get("/health", summary="Liveness probe", description="Confirms the process is up. Does NOT confirm the model loaded -- see /ready for that.")
+@app.get(
+    "/health",
+    summary="Liveness probe",
+    description=(
+        "Confirms the process is up. Does NOT confirm the model loaded -- see /ready for that."
+    ),
+)
 def health():
     """
     Liveness only -- confirms the process is up and responding, NOT that
@@ -82,7 +91,15 @@ def health():
     return {"status": "healthy", "service": "graph-fraud-ai"}
 
 
-@app.get("/ready", summary="Readiness probe", description="Returns 200 if the model/graph loaded successfully at startup, 503 with a generic error otherwise. Used as render.yaml's healthCheckPath.")
+@app.get(
+    "/ready",
+    summary="Readiness probe",
+    description=(
+        "Returns 200 if the model/graph loaded successfully at startup, "
+        "503 with a generic error otherwise. Used as render.yaml's "
+        "healthCheckPath."
+    ),
+)
 def ready(response: Response):
     """
     FIX: previously returned _startup_error verbatim in the response body
