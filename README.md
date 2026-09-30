@@ -42,23 +42,16 @@ Streamlit / hosted demo
 
 ## Test performance
 
-> **Note:** these metrics were recorded before two corrective fixes:
-> (1) a feature-column misalignment bug where the model was trained on
-> features whose names did not match their actual values, and (2) the
-> switch from a random to a chronological train/val/test split (IEEE-CIS
-> is time-ordered; a random split leaks future transactions into
-> training). **These numbers are known-stale and pending regeneration**
-> after retraining against the corrected pipeline -- see
-> `reports/archive/` for how they were produced, and do not treat them
-> as representative of the corrected model.
+These metrics were regenerated after retraining the production GraphSAGE
+model against the corrected feature pipeline and chronological split.
 
 | Metric | Value |
 |---|---:|
-| ROC-AUC | 0.6760 |
-| PR-AUC | 0.0821 |
-| Precision | 0.1092 |
-| Recall | 0.3775 |
-| F1 | 0.1694 |
+| ROC-AUC | 0.7108 |
+| PR-AUC | 0.0929 |
+| Precision | 0.0984 |
+| Recall | 0.4797 |
+| F1 | 0.1633 |
 
 These metrics are the recorded benchmark results in the repository registry; they should not be interpreted as a guarantee of production performance.
 
